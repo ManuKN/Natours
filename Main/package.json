@@ -1,0 +1,11 @@
+{
+  "name": "natours_project",
+  "version": "1.0.0",
+  "description": "Learning Node , Express and MongoDB",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Manu",
+  "license": "ISC"
+}
