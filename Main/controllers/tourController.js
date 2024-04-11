@@ -6,11 +6,34 @@ const Tour = require('../models/tourModel');
 
 //RouteHandlers
 exports.getAllTours = async (req, res) => {
-  console.log(req.body);
+  //console.log(req.query);
   try {
-    const tours = await Tour.find();
+    //Build Query
+    //1)Filtering
+    const queryObj = {...req.query};
+    const excludedFields = ['page','sort','limit','field'];
+    excludedFields.forEach(el => delete queryObj[el]);
+    console.log(queryObj);
+    //2)Advance Filtering
+    let queryStr = JSON.stringify(queryObj);
+   queryStr = queryStr.replace(/\b(gte|lte|gt|lt)\b/g , match => `$${match}`);
+   console.log(JSON.parse(queryStr));
+
+   //{ duration: { gte: '5' } } to add $ sign we write above code 
+   //{ duration: { '$gte': '5' } }
+    
+    //this is the normal way of filtring the data using filter/find object
+    //Execute Query
+    const query = Tour.find(JSON.parse(queryStr));
+    const tours = await query;
+    //here since the req.query have the same object with the query which we can put inside the findmethod we can use req.query instead of gicing query object manually
+
+    //other method of filtring data is by using special mongoose methods
+    //const query =  Tour.find().where('duration').equals(5).where('difficulty').equals('easy');
+    //Send Response
     res.status(200).json({
       status: 'Success',
+      results: tours.length,
       data: {
         tours,
       },
