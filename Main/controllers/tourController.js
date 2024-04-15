@@ -9,25 +9,56 @@ exports.getAllTours = async (req, res) => {
   //console.log(req.query);
   try {
     //Build Query
+
     //1)Filtering
-    const queryObj = {...req.query};
-    const excludedFields = ['page','sort','limit','field'];
-    excludedFields.forEach(el => delete queryObj[el]);
+    const queryObj = { ...req.query };
+    const excludedFields = ['page', 'sort', 'limit', 'field'];
+    excludedFields.forEach((el) => delete queryObj[el]);
     console.log(queryObj);
+
     //2)Advance Filtering
     let queryStr = JSON.stringify(queryObj);
-   queryStr = queryStr.replace(/\b(gte|lte|gt|lt)\b/g , match => `$${match}`);
-   console.log(JSON.parse(queryStr));
+    queryStr = queryStr.replace(/\b(gte|lte|gt|lt)\b/g, (match) => `$${match}`);
+    console.log(JSON.parse(queryStr));
+    //{ duration: { gte: '5' } } to add $ sign we write above code
+    //{ duration: { '$gte': '5' } }
 
-   //{ duration: { gte: '5' } } to add $ sign we write above code 
-   //{ duration: { '$gte': '5' } }
-    
-    //this is the normal way of filtring the data using filter/find object
+    let query = Tour.find(JSON.parse(queryStr));
+    //here since the req.query have the same object with the query which we can put inside the findmethod we can use req.query instead of writing query object manually
+
+    //3)Sorting
+    if (req.query.sort) {
+      const sortBY = req.query.sort.split(',').join(' ');
+      console.log(sortBY);
+      query.sort(sortBY);
+      //sort('price ratingsAverage')
+    } else {
+      query = query.sort('-createdAt');
+      //byDefault sort them by cretaedAt
+    }
+
+    //4)Fields Limiting
+    if (req.query.field) {
+      //query.select('name price duration difficulty'); to get into this format we wrote the below code
+      const fieldsParams = req.query.field.split(',').join(' ');
+      console.log(fieldsParams);
+      query = query.select(fieldsParams);
+    } else {
+      query = query.select('-__v');
+    }
+
+    //5)Pagination
+    const page = req.query.page * 1;
+    const limit = req.query.limit * 1;  
+    const skip = (page - 1)*limit;
+    query = query.skip(skip).limit(limit)
+
+    const numDocs = await Tour.countDocuments();
+    if(skip >= numDocs) throw new Error('This page is not exsist');
+
+
     //Execute Query
-    const query = Tour.find(JSON.parse(queryStr));
     const tours = await query;
-    //here since the req.query have the same object with the query which we can put inside the findmethod we can use req.query instead of gicing query object manually
-
     //other method of filtring data is by using special mongoose methods
     //const query =  Tour.find().where('duration').equals(5).where('difficulty').equals('easy');
     //Send Response

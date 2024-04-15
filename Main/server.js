@@ -14,11 +14,13 @@ const DB = process.env.DATABASE.replace(
     useCreateIndex:true,
     useFindAndModify:false,
     useUnifiedTopology:true
-  }).then((con) =>{
-    console.log("connections:", con.connections )
+  }).then(() =>{
+    // console.log("connections:", con.connections )
     console.log("DataBase is succesfully Connected")
   })
 
+
+  //old way of cretaing document and saving to the DATABASE
 // const testTour = new Tour({
 //   name: 'The Park Camper',
 //   price:597,
@@ -34,7 +36,7 @@ const DB = process.env.DATABASE.replace(
 //   });
 
 console.log(process.env);
-const Port = process.env.PORT;
+ const Port = process.env.PORT;
 console.log(Port);
 console.log(process.env.NANHESRU);
 console.log(process.env.NODE_ENV);
