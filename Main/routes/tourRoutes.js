@@ -6,6 +6,8 @@ const router = express.Router();
 //router.param('id', tourController.checkIn);
 router.route('/top-5-cheap').get(tourController.aliasTopTours ,tourController.getAllTours);
 
+router.route('/tours-stats').get(tourController.getToursStats)
+
 router
   .route('/')
   .get(tourController.getAllTours)

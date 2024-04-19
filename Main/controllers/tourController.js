@@ -1,5 +1,5 @@
 const Tour = require('../models/tourModel');
-const APIfeatures = require("../utils/apifeatures")
+const APIfeatures = require('../utils/apifeatures');
 // const tours = JSON.parse(
 //   fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`),
 // );
@@ -106,6 +106,34 @@ exports.deleteTour = async (req, res) => {
       status: 'success',
       data: {
         tour,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'Fail',
+      message: err,
+    });
+  }
+};
+
+exports.getToursStats = async (req, res) => {
+  try {
+    const stats = await Tour.aggregate([
+      { $match: { ratingAverage: { $gte: 4.5 } } },
+      {
+        $group: {
+          _id: null,
+          avgRating: { $avg: '$ratingAverage' },
+          avgPrice: { $avg: '$price' },
+          minPrice: { $min: '$price' },
+          maxPrice: { $max: '$price' },
+        },
+      },
+    ]);
+    res.status(200).json({
+      status: 'success',
+      data: {
+        stats,
       },
     });
   } catch (err) {
