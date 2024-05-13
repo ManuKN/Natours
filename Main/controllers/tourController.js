@@ -1,5 +1,6 @@
 const Tour = require('../models/tourModel');
 const APIfeatures = require('../utils/apifeatures');
+const catchAsych = require('../utils/catchAsych')
 // const tours = JSON.parse(
 //   fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`),
 // );
@@ -11,8 +12,8 @@ exports.aliasTopTours = (req, res, next) => {
 };
 
 //RouteHandlers
-exports.getAllTours = async (req, res) => {
-  try {
+exports.getAllTours = catchAsych(async (req, res) => {
+  
     const features = new APIfeatures(Tour.find(), req.query)
       .filter()
       .sort()
@@ -28,19 +29,11 @@ exports.getAllTours = async (req, res) => {
         tours,
       },
     });
-  } catch (err) {
-    res.status(404).json({
-      status: 'Fail',
-      message: err,
-    });
-  }
-};
+});
 
-exports.getTour = async (req, res) => {
+exports.getTour = catchAsych(async (req, res) => {
   //older way of getteing data by ID
   //Tour.findOne({ _id: req.params.id});
-
-  try {
     //new way of getting data by ID
     const tour = await Tour.findById(req.params.id);
     res.status(200).json({
@@ -49,23 +42,18 @@ exports.getTour = async (req, res) => {
         tour,
       },
     });
-  } catch (err) {
-    res.status(404).json({
-      status: 'Fail',
-    });
-  }
-};
+});
 
-exports.createTour = async (req, res) => {
+// eslint-disable-next-line arrow-body-style
+// const catchAsych = fn => {
+//   return (req , res , next) => {
+//     fn(req , res ,next).catch(next)
+//   }
+// }
+
+exports.createTour = catchAsych( async (req, res , next ) => {
   // console.log(req.body)
-
-  //old way of creating document
-  // const newTour = new Tour({})
-  // newTour.save()
-
-  //New way of creating Documents
-  try {
-    const newTour = await Tour.create(req.body);
+  const newTour = await Tour.create(req.body);
 
     res.status(201).json({
       status: 'success',
@@ -73,14 +61,21 @@ exports.createTour = async (req, res) => {
         tours: newTour,
       },
     });
-  } catch (err) {
-    res.status(400).json({ status: 'fail', message: err });
-  }
-};
 
-exports.updateTour = async (req, res) => {
+  //old way of creating document
+  // const newTour = new Tour({})
+  // newTour.save()
+
+  //New way of creating Documents
+  // try {
+    
+  // } catch (err) {
+  //   res.status(400).json({ status: 'fail', message: err });
+  // }
+});
+
+exports.updateTour = catchAsych(async (req, res) => {
   //console.log(req.body);
-  try {
     const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
@@ -91,16 +86,9 @@ exports.updateTour = async (req, res) => {
         tour,
       },
     });
-  } catch (err) {
-    res.status(404).json({
-      status: 'Fail',
-      message: err,
-    });
-  }
-};
+});
 
-exports.deleteTour = async (req, res) => {
-  try {
+exports.deleteTour = catchAsych(async (req, res) => {
     const tour = await Tour.findByIdAndDelete(req.params.id);
     res.status(204).json({
       status: 'success',
@@ -108,16 +96,9 @@ exports.deleteTour = async (req, res) => {
         tour,
       },
     });
-  } catch (err) {
-    res.status(400).json({
-      status: 'Fail',
-      message: err,
-    });
-  }
-};
+});
 
-exports.getToursStats = async (req, res) => {
-  try {
+exports.getToursStats = catchAsych(async (req, res) => {
     const stats = await Tour.aggregate([
       { $match: { ratingAverage: { $gte: 4.5 } } }, 
       {
@@ -144,17 +125,11 @@ exports.getToursStats = async (req, res) => {
         stats,
       },
     });
-  } catch (err) {
-    res.status(400).json({
-      status: 'Fail',
-      message: err,
-    });
-  }
-};
+});
 
-exports.getMontlyPlan = async (req , res) =>{
-try{
+exports.getMontlyPlan = catchAsych(async (req , res) =>{
   const year = req.params.year * 1;
+  // try{
   const plan = await Tour.aggregate([
     {
       $unwind:'$startDates'
@@ -193,11 +168,11 @@ try{
       plan
     }
   })
-}
-catch(err){
-  res.status(404).json({
-    status:'Fail',
-    message:err
-  })
-}
-}
+// }
+// catch(err){
+//   res.status(404).json({
+//     status:'Fail',
+//     message:err
+//   })
+// }
+})
