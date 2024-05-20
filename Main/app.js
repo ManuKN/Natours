@@ -20,6 +20,7 @@ app.use((req, res, next) => {
 
 app.use((req, res, next) => {
   req.requestedTime = new Date().toISOString();
+  console.log(req.headers);
   next();
 });
 
