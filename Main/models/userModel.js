@@ -23,6 +23,11 @@ const userSchema = new mongoose.Schema({
     minLength: [8, 'Your password should be atleast 8 charecters'],
     select:false
   },
+  role:{
+    type:String,
+    enum:['user','guide','lead-guide','admin'],
+    default:'user'
+  },
   passwordConfirm: {
     type: String,
     required: [true, 'Please confirm your password'],
@@ -34,6 +39,7 @@ const userSchema = new mongoose.Schema({
       message: 'Your password is not matching',
     },
   },
+  passwordChangedAt:Date
 });
 
 userSchema.pre('save' ,async function(next){
@@ -49,9 +55,18 @@ userSchema.pre('save' ,async function(next){
     next();
 })
 
+//static instance method to check the passsword that is stored in db and the password that user entered are same 
 userSchema.methods.correctPassword =  async function(candidatepassword , userpassword){
   console.log(candidatepassword , userpassword)
   return await bcrypt.compare(candidatepassword,userpassword)
+}
+
+userSchema.methods.PasswordChanged = function(JwtCreateAt){
+  if(this.passwordChangedAt){
+    const changedformat = parseInt(this.passwordChangedAt.getTime()/1000 , 10)
+    return JwtCreateAt < changedformat
+  }
+  return false
 }
 
 const Users = mongoose.model('User', userSchema);

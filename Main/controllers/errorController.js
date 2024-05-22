@@ -18,6 +18,8 @@ const handleCastErrorDB = (err) => {
   const message = `Invalid ${err.path} : ${err.value}`;
   return new AppError(message, 400);
 };
+const handleJwtError  = err => new AppError('Invalid token, please login again',401);
+const handleJwtExpries = err => new AppError('Your token Expired , please login again',401);
 
 const sendErrorDev = (err, res) => {
   res.status(err.statusCode).json({
@@ -38,6 +40,7 @@ const sendErrorProd = (err, res) => {
     });
   }
   //if the error is programmical then we just want to hide the detail of the error and show only the this simple message to the client
+  //programming or other unknown Error : do not leak error details
   else {
     console.log('Error 💥', err);
     res.status(500).json({
@@ -61,7 +64,9 @@ module.exports = (err, req, res, next) => {
     if (error.code === 11000) error = handleDuplicateFieldsDB(error);
     if (error.name === 'ValidationError')
       error = handleValidationErrorDB(error);
-    sendErrorProd(error, res);
+    if (error.name === 'JsonWebTokenError') error = handleJwtError(error);
+    if (error.name === 'TokenExpiredError') error = handleJwtExpries(error);
+      sendErrorProd(error, res);
   }
 };
 //Global middleware for error handling
