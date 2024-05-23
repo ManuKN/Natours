@@ -3,6 +3,7 @@ const { promisify } = require('util');
 const Users = require('../models/userModel');
 const catchAsych = require('../utils/catchAsych');
 const AppError = require('../utils/appError');
+const sendEmail = require('../utils/email')
 
 
 // eslint-disable-next-line arrow-body-style
@@ -14,12 +15,14 @@ const jwtToken = id => {
 console.log(process.env.JWT_EXPIRESIN);
 exports.signup = catchAsych(async (req, res, next) => {
   const newUser = await Users.create({
-    role:req.body.role,
+    role: req.body.role,
     name: req.body.name,
     email: req.body.email,
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
-    passwordChangedAt:req.body.passwordChangedAt
+    passwordChangedAt: req.body.passwordChangedAt,
+    passwordResetToken: req.body.passwordResetToken,
+    passwordResetExpires:req.body.passwordResetExpires
   });
 
   //here we r sending jwt token to the user first argu is payload object which contain all the data that we r going to store inside token and second argu is the secret key and the third argu is the options where inside we provide the expiresIN and many more if we want
@@ -91,7 +94,7 @@ if(!currentUser){
    }
 
    //Grant access to protected route
-   req.body = currentUser // if we wan to pass data from one middleware to other we have to send that data through this req body only so that is y we r assigning/adding current user to req body object 
+   req.body = currentUser // if we want to pass data from one middleware to other we have to send that data through this req body only so this is y we r assigning/adding current user to req body object 
   next()
 } )
 
@@ -107,4 +110,42 @@ exports.restrictTo = (...roles) =>{
    }
     next()
  }
+}
+
+exports.forgotPassword = async( req , res , next) =>{
+  //1) get the user based  on Posted email
+const user = await Users.findOne({email:req.body.email})
+if(!user){
+  return next(new AppError('User no loger exsist in our database' , 404))
+}
+  //2)Generate the random resetToken
+const resetToken = user.createPasswordResetToken();
+//we r saving all the data that we assigned in the instance method in the model like password expires and the passwordresettoken
+await user.save({validateBeforeSave : false});
+  //3)Send it to User's email
+const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${resetToken}`
+ 
+const message = `Forgot your Password? Submit a PATCH with your new password and passwordConfirm to:${resetURL}.\n If your didn't forget your password,please ignore this email!`
+
+try{
+  sendEmail({
+  email:user.email,
+  subject:'Your password reset token (valid for 10min)',
+  message
+})
+
+res.status(200).json({
+  status:'Sccuess',
+  message:'Token sent to email!'
+})}
+catch(err){
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+  await user.save({validateBeforeSave : false});
+  next(new AppError('There was an error sending the email! Please try again later' , 500));
+}
+}
+
+exports.resetPassword = (req ,res,next) =>{
+  
 }
