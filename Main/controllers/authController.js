@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { promisify } = require('util');
 const Users = require('../models/userModel');
@@ -79,7 +80,7 @@ if(req.headers.authorization && req.headers.authorization.startsWith('Bearer'))
 
 //Verification
 const decoded = await promisify(jwt.verify)(token , process.env.JWT_SECRET);
-console.log(decoded);
+console.log('decoded token ',decoded);
 
 //Check if User still exist
 const currentUser = await Users.findById(decoded.id);
@@ -146,6 +147,33 @@ catch(err){
 }
 }
 
-exports.resetPassword = (req ,res,next) =>{
+exports.resetPassword = catchAsych(async(req ,res , next) => {
+  //1)Get user based on the token
+
+const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
+
+  const user = await Users.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetExpires: { $gt: Date.now() },
+  });
   
-}
+  //2)If token has not expired , and there is a user with that token . then set the new password
+  if(!user){
+    return next(new AppError('Your token is invalid or expired',400))
+  }
+
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+
+  await user.save(); //in this case we do not want trun off the validator cause we want validator to validate password and passwordconfirm r same😉
+
+  //3)Update ChangesPropertyAy property for the user
+  //4)Log the user in ,  send jwt 
+   const token = jwtToken(user._id);
+    res.status(200).json({
+        status:'Sccuess',
+        token
+    })   
+})
