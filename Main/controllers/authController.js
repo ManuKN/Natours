@@ -14,6 +14,19 @@ const jwtToken = id => {
  });
 }
 console.log(process.env.JWT_EXPIRESIN);
+
+const createSendToken = (user , StatusCode , res) =>{
+  const tokenforsignup = jwtToken(user._id)
+
+  res.status(StatusCode).json({
+    status: 'Success',
+    token:tokenforsignup,
+    userdata: {
+      user:user,
+    },
+  });
+}
+
 exports.signup = catchAsych(async (req, res, next) => {
   const newUser = await Users.create({
     role: req.body.role,
@@ -27,15 +40,7 @@ exports.signup = catchAsych(async (req, res, next) => {
   });
 
   //here we r sending jwt token to the user first argu is payload object which contain all the data that we r going to store inside token and second argu is the secret key and the third argu is the options where inside we provide the expiresIN and many more if we want
-  const tokenforsignup = jwtToken(newUser._id)
-
-  res.status(200).json({
-    status: 'Success',
-    token:tokenforsignup,
-    userdata: {
-      user: newUser,
-    },
-  });
+  createSendToken(newUser , 200 , res)
 });
 
 
@@ -59,11 +64,7 @@ exports.login = catchAsych(async (req,res,next) =>{
     }
     
     //If everthing is ok then send a Token
-    const token = jwtToken(user._id);
-    res.status(200).json({
-        status:'Sccuess',
-        token
-    })    
+    createSendToken(user , 200 , res)
 })
 
 exports.protect = catchAsych(async (req, res , next) => {
@@ -80,7 +81,7 @@ if(req.headers.authorization && req.headers.authorization.startsWith('Bearer'))
 
 //Verification
 const decoded = await promisify(jwt.verify)(token , process.env.JWT_SECRET);
-console.log('decoded token ',decoded);
+
 
 //Check if User still exist
 const currentUser = await Users.findById(decoded.id);
@@ -93,9 +94,9 @@ if(!currentUser){
    {
     return next(new AppError('User recently changed the password! please login again'))
    }
-
+   console.log('Current User ',currentUser);
    //Grant access to protected route
-   req.body = currentUser // if we want to pass data from one middleware to other we have to send that data through this req body only so this is y we r assigning/adding current user to req body object 
+   req.user = currentUser // if we want to pass data from one middleware to other we have to send that data through this req body only so this is y we r assigning/adding current user to req body object 
   next()
 } )
 
@@ -171,9 +172,25 @@ const hashedToken = crypto.createHash('sha256').update(req.params.token).digest(
 
   //3)Update ChangesPropertyAy property for the user
   //4)Log the user in ,  send jwt 
-   const token = jwtToken(user._id);
-    res.status(200).json({
-        status:'Sccuess',
-        token
-    })   
+  createSendToken(user , 200 , res)
+})
+
+exports.updatePassword = catchAsych(async (req,res,next) =>{
+  //1)Get User from collection
+  console.log('USer Object',req.user);
+  const user = await Users.findById(req.user.id).select('+password');
+
+  //2)Check if posted current password id correct
+  if(!(await user.correctPassword(req.body.passwordCurrent , user.password))){
+    return next(new AppError('Your current password is wrong. Please try again!',401));
+  }
+
+  //3)update the new password
+  user.password = req.body.Newpassword;
+  user.passwordConfirm = req.body.passwordConfirm;
+  await user.save()
+//User.findByIdAndUpdate will not work as intented that is y we r using save()
+
+  //Login user and send jwt
+  createSendToken(user , 200 , res)
 })

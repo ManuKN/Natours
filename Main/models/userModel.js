@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 // eslint-disable-next-line import/no-extraneous-dependencies
 const bcrypt = require('bcryptjs');
+const { type } = require('os');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -43,6 +44,11 @@ const userSchema = new mongoose.Schema({
   passwordChangedAt:Date,
   passwordResetToken:String,
   passwordResetExpires:Date,
+  active:{
+    type:Boolean,
+    default:true,
+    select:false
+  }
 });
 
 userSchema.pre('save' ,async function(next){
@@ -64,6 +70,13 @@ userSchema.pre('save',function(next){
   }
   this.passwordChangedAt = Date.now() - 1000; // here we r adding 1000ms to make sure that the token is always created after the password as been changed;
   next()    
+})
+
+// eslint-disable-next-line prefer-arrow-callback
+userSchema.pre(/^find/, function(next){
+  //this here points to the current query which is all query starts with find🙂
+  this.find({active:{$ne:false}})
+  next()
 })
 
 //static instance method to check the passsword that is stored in db and the password that user entered are same 
