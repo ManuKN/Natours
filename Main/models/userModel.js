@@ -69,7 +69,7 @@ userSchema.pre('save',function(next){
     return next();
   }
   this.passwordChangedAt = Date.now() - 1000; // here we r adding 1000ms to make sure that the token is always created after the password as been changed;
-  next()    
+  next()
 })
 
 // eslint-disable-next-line prefer-arrow-callback

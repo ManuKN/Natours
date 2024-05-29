@@ -10,6 +10,8 @@ const filteredObj = (obj , ...allowedRoles) =>{
   return newObj
 }
 
+
+
 exports.getAllUsers = catchAsych(async (req, res, next) => {
   const users = await User.find()
   res.status(200).json({

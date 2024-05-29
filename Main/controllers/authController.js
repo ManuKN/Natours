@@ -16,15 +16,34 @@ const jwtToken = id => {
 console.log(process.env.JWT_EXPIRESIN);
 
 const createSendToken = (user , StatusCode , res) =>{
-  const tokenforsignup = jwtToken(user._id)
+  const token = jwtToken(user._id)
 
-  res.status(StatusCode).json({
-    status: 'Success',
-    token:tokenforsignup,
-    userdata: {
-      user:user,
-    },
-  });
+  console.log(
+    'expire date',
+    process.env.JWT_COOKIE_EXPIRESIN * 24 * 60 * 60 * 1000,
+  );
+
+  const cookieOptions = {
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRESIN * 24 * 60 * 60 * 1000,
+    ), //here we r converting the expires num into milliseconds,
+                                                                                         
+  };
+
+  console.log(cookieOptions)
+
+  if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
+
+   res.cookie('jwt', token, cookieOptions);
+
+   user.password = undefined // to remove password from the output
+    res.status(StatusCode).json({
+      status: 'Success',
+      token,
+      userdata: {
+        user: user,
+      },
+    });
 }
 
 exports.signup = catchAsych(async (req, res, next) => {
