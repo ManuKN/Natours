@@ -13,7 +13,10 @@ const filteredObj = (obj , ...allowedRoles) =>{
 
 
 exports.getAllUsers = catchAsych(async (req, res, next) => {
-  const users = await User.find()
+  const users = await User.find().populate({
+        path: 'user',
+        select: '-__id -passwordChangedAt',
+      })
   res.status(200).json({
     status: 'Sccuess',
     Users:{

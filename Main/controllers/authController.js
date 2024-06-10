@@ -126,7 +126,7 @@ exports.restrictTo = (...roles) =>{
  return (req , res , next) => {
   //roles[admin , lead-guide].role = user
    //here roles will be accssibel becauseof closure.
-   if(!roles.includes(req.body.role)){
+   if(!roles.includes(req.user.role)){
     return next(new AppError('you do not have permission to do this action',403))
    }
     next()

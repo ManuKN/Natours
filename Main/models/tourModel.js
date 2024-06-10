@@ -1,81 +1,111 @@
 /* eslint-disable prefer-arrow-callback */
 const mongoose = require('mongoose');
 const slugify = require('slugify');
+//  
 //const validator = require('validator')
 
-const tourschema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'A tour must have a name'],
-    maxLength:[40,'A tour name must have atleast 40 charecters'],
-    minLength:[10,'A tour name must have atleast 10 charecters'],
-    //validate: [validator.isAlpha,'name must contains only charecters'],
-    unique: true,
-  },
-  slug:String,
-  duration: {
-    type: Number,
-    required: [true, 'A tour must have a durations'],
-  },
-  maxGroupSize: {
-    type: Number,
-    required: [true, 'A tour must have a maxGroupSize'],
-  },
-  difficulty: {
-    type: String,
-    required: [true, 'A tour must have a difficulty'],
-    enum:{
-      values:['easy','difficult','medium'],
-      message:'Diificulty must be either: easy, difficulty , medium'
-    }
-  },
-  ratingAverage: {
-    type: Number,
-    default: 4.5,
-    min:[1,'Ratings must be above 1.0'],
-    max:[5,'Ratings must be below 5.0']
-  },
-  ratingQuantity: {
-    type: Number,
-    deafult: 0,
-  },
-  price: {
-    type: Number,
-    required: [true, 'A tour must have a Price'],
-  },
-  priceDiscount:{
-    type:Number,
-    validate:{
-    validator:function(val){
-   return this.price > val
+const tourschema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, 'A tour must have a name'],
+      maxLength: [40, 'A tour name must have atleast 40 charecters'],
+      minLength: [10, 'A tour name must have atleast 10 charecters'],
+      //validate: [validator.isAlpha,'name must contains only charecters'],
+      unique: true,
     },
-    message:'PriceDiscount ({VALUE}) should ve lessthan regular price'
-  }
+    slug: String,
+    duration: {
+      type: Number,
+      required: [true, 'A tour must have a durations'],
+    },
+    maxGroupSize: {
+      type: Number,
+      required: [true, 'A tour must have a maxGroupSize'],
+    },
+    difficulty: {
+      type: String,
+      required: [true, 'A tour must have a difficulty'],
+      enum: {
+        values: ['easy', 'difficult', 'medium'],
+        message: 'Diificulty must be either: easy, difficulty , medium',
+      },
+    },
+    ratingAverage: {
+      type: Number,
+      default: 4.5,
+      min: [1, 'Ratings must be above 1.0'],
+      max: [5, 'Ratings must be below 5.0'],
+    },
+    ratingQuantity: {
+      type: Number,
+      deafult: 0,
+    },
+    price: {
+      type: Number,
+      required: [true, 'A tour must have a Price'],
+    },
+    priceDiscount: {
+      type: Number,
+      validate: {
+        validator: function (val) {
+          return this.price > val;
+        },
+        message: 'PriceDiscount ({VALUE}) should ve lessthan regular price',
+      },
+    },
+    summary: {
+      type: String,
+      trim: true,
+      required: [true, 'A tour must have description'],
+    },
+    description: {
+      type: String,
+      trim: true,
+    },
+    imageCover: {
+      type: String,
+      required: [true, 'A tour must have Cover image'],
+    },
+    images: [String],
+    createdAt: {
+      type: Date,
+      default: Date.now(),
+      select: false,
+    },
+    startDates: [Date],
+    secretTour: Boolean,
+    startLocation: {
+      type: {
+        type:'String',
+        default:'Point',
+        enum:['Point']
+      },
+      coordinates: [Number],
+      address:'String',
+      description:'String'
+    },
+    locations:[
+      {
+        type:{
+          type:'String',
+          default:'Point',
+          enum:['Point']
+        },
+        coordinates:[Number],
+        address:'String',
+        description:'String',
+        day:'Number'
+      }
+    ],
+    guides:[
+      {
+        type:mongoose.Schema.ObjectId,
+        ref:'User'
+      }
+    ]
   },
-  summary: {
-    type: String,
-    trim: true,
-    required: [true, 'A tour must have description'],
-  },
-  description: {
-    type: String,
-    trim: true,
-  },
-  imageCover: {
-    type: String,
-    required: [true, 'A tour must have Cover image'],
-  },
-  images: [String],
-  createdAt: {
-    type: Date,
-    default: Date.now(),
-    select:false
-  },
-  startDates:[Date],
-  secretTour:Boolean
-},
-{toJSON:{virtuals:true},
-toObject:{virtuals:true}}
+  { toJSON: { virtuals: true }, toObject: { virtuals: true } },
 );
 
 //this is virtual properties
@@ -103,11 +133,26 @@ tourschema.pre('save',function(next){
 // })
 
 
+//this is the middleware to embbed the  user in the tour collection as a new document all the user how r selected that particular tour
+// tourschema.pre('save', async function(next){
+//   const guidesPromises = this.guides.map(async id => await User.findById(id));
+//   this.guides = await Promise.all(guidesPromises);
+//   console.log('data coming',this.guides)
+// })
+
 
 //This is Query Middleware
 tourschema.pre(/^find/,function(next){
   this.find({secretTour: {$ne:true}})
   this.start = Date.now();
+  next()
+})
+
+tourschema.pre(/^find/ , function(next){
+  this.populate({
+    path: 'guides',
+    select: '-__v -passwordChangedAt',
+  });
   next()
 })
 
@@ -121,7 +166,7 @@ tourschema.pre('aggregate',function(next){
   this.pipeline().unshift({$match:{secretTour:{$ne : true}}})
   console.log(this.pipeline())
   next()
-})
+})  
 
 const Tour = mongoose.model('Tour', tourschema);
 

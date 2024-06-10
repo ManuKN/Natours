@@ -35,7 +35,15 @@ exports.getTour = catchAsych(async (req, res) => {
   //older way of getteing data by ID
   //Tour.findOne({ _id: req.params.id});
     //new way of getting data by ID
-    const tour = await Tour.findById(req.params.id);
+    const tour = await Tour.findById(req.params.id)
+      .populate({
+        path: 'guides',
+        select: '-__v -passwordChangedAt',
+      })
+      .populate({
+        path: 'tour',
+        select: '-__id -passwordChangedAt',
+      }); //we used populate function to populate the user based on the userID mentioned in the guides in model amd also we used select to remove the data that we do not want to show in the result
     res.status(200).json({
       status: 'success',
       data: {
