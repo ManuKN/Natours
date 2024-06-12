@@ -17,7 +17,7 @@ const reviewSchema = new mongoose.Schema(
       default: Date.now(),
     },
     tour: {
-      type: mongoose.Schema.ObjectId, 
+      type: mongoose.Schema.ObjectId,
       ref: 'Tour',
       required: [true, 'Review must belong to a tour'],
     },
@@ -33,23 +33,14 @@ const reviewSchema = new mongoose.Schema(
   },
 );
 
-
 //Query middleware
 reviewSchema.pre(/^find/, function (next) {
   this.populate({
     path: 'user',
-    select: '-__v -passwordChangedAt',
+    select: 'name photo',
   });
   next();
 });
 
-reviewSchema.pre(/^find/, function (next) {
-  this.populate({
-    path: 'tour',
-    select: '-__v -passwordChangedAt',
-  });
-  next();
-});
-
-const Review = mongoose.model('Review',reviewSchema);
+const Review = mongoose.model('Review', reviewSchema);
 module.exports = Review;
