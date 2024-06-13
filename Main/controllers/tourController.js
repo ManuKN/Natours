@@ -1,6 +1,7 @@
 const Tour = require('../models/tourModel');
 const APIfeatures = require('../utils/apifeatures');
 const catchAsych = require('../utils/catchAsych');
+const factory = require("./handleFactory")
 // const tours = JSON.parse(
 //   fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`),
 // );
@@ -12,37 +13,9 @@ exports.aliasTopTours = (req, res, next) => {
 };
 
 //RouteHandlers
-exports.getAllTours = catchAsych(async (req, res) => {
-  const features = new APIfeatures(Tour.find(), req.query)
-    .filter()
-    .sort()
-    .limitfield()
-    .paginate();
-  //Execute Query
-  const tours = await features.query;
-  //Send Response
-  res.status(200).json({
-    status: 'Success',
-    results: tours.length,
-    data: {
-      tours,
-    },
-  });
-});
+exports.getAllTours = factory.getAll(Tour)
 
-exports.getTour = catchAsych(async (req, res) => {
-  //older way of getteing data by ID
-  //Tour.findOne({ _id: req.params.id});
-  //new way of getting data by ID
-  const tour = await Tour.findById(req.params.id).populate('reviews')
-    //we used populate function to populate the user based on the userID mentioned in the guides in model amd also we used select to remove the data that we do not want to show in the result
-  res.status(200).json({
-    status: 'success',
-    data: {
-      tour,
-    },
-  });
-});
+exports.getTour = factory.getOne(Tour, { path: 'reviews' });
 
 // eslint-disable-next-line arrow-body-style
 // const catchAsych = fn => {
@@ -51,16 +24,7 @@ exports.getTour = catchAsych(async (req, res) => {
 //   }
 // }
 
-exports.createTour = catchAsych(async (req, res, next) => {
-  // console.log(req.body)
-  const newTour = await Tour.create(req.body);
-
-  res.status(201).json({
-    status: 'success',
-    data: {
-      tours: newTour,
-    },
-  });
+exports.createTour = factory.createOne(Tour)
 
   //old way of creating document
   // const newTour = new Tour({})
@@ -72,31 +36,12 @@ exports.createTour = catchAsych(async (req, res, next) => {
   // } catch (err) {
   //   res.status(400).json({ status: 'fail', message: err });
   // }
-});
 
-exports.updateTour = catchAsych(async (req, res) => {
-  //console.log(req.body);
-  const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
-  res.status(200).json({
-    status: 'Success',
-    data: {
-      tour,
-    },
-  });
-});
 
-exports.deleteTour = catchAsych(async (req, res) => {
-  const tour = await Tour.findByIdAndDelete(req.params.id);
-  res.status(204).json({
-    status: 'success',
-    data: {
-      tour,
-    },
-  });
-});
+//Do not update password with this
+exports.updateTour = factory.UpdateOne(Tour);
+
+exports.deleteTour = factory.deleteOne(Tour);
 
 exports.getToursStats = catchAsych(async (req, res) => {
   const stats = await Tour.aggregate([
