@@ -8,13 +8,19 @@ router.route('/signup').post(authController.signup)
 router.route('/login').post(authController.login)
 router.route('/forgotPassword').post(authController.forgotPassword)
 router.route('/resetPassword/:token').patch(authController.resetPassword)
-router.route('/updateMyPassword').patch(authController.protect , authController.updatePassword)
-router.patch('/updateMe',authController.protect , userController.updateMe);
-router.delete('/deleteMe',authController.protect , userController.deleteMe);
 
-router.route('/').get(authController.protect,userController.getAllUsers).post(userController.createUser);
+//middleware runs in a sequence so that after this below middleware all the routes r protected 
+router.use(authController.protect)
 
-router.route('/me').get(authController.protect , userController.getme , userController.getUser);
+router.route('/updateMyPassword').patch(authController.updatePassword);
+router.patch('/updateMe', userController.updateMe);
+router.route('/me').get(userController.getme, userController.getUser);
+router.delete('/deleteMe', userController.deleteMe);
+
+//after this below middleware all the routes a only allowed to admin
+router.use(authController.restrictTo('admin'));
+
+router.route('/').get(userController.getAllUsers).post(userController.createUser);
 
 router.route('/:id').get(userController.getUser).patch(userController.updateUser).delete(userController.deleteUser);
 

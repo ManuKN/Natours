@@ -36,6 +36,7 @@ const tourschema = new mongoose.Schema(
       default: 4.5,
       min: [1, 'Ratings must be above 1.0'],
       max: [5, 'Ratings must be below 5.0'],
+      index:true
     },
     ratingQuantity: {
       type: Number,
@@ -107,6 +108,9 @@ const tourschema = new mongoose.Schema(
   },
   { toJSON: { virtuals: true }, toObject: { virtuals: true } },
 );
+
+tourschema.index({ price: 1, ratingAverage:-1 });
+tourschema.index({slug : 1});
 
 //this is virtual properties
 tourschema.virtual('durationWeeks').get(function(){
