@@ -83,7 +83,8 @@ exports.getAll = (Model) =>
       .limitfield()
       .paginate();
     //Execute Query
-    const doc = await features.query.explain();
+    // const doc = await features.query.explain(); // here we used explain to see some how many docs the db is examining to search specific doc to avoid unnessary examining we used index for price and other field
+    const doc = await features.query;
     if (!doc)
       return next(
         new AppError(

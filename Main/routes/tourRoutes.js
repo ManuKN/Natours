@@ -22,6 +22,11 @@ router
   .route('/montlyplan/:year')
   .get(authController.restrictTo('user'), tourController.getMontlyPlan);
 
+router.route('/tours-within/:distance/center/:latlng/unit/:unit').get(tourController.getTourwithin);
+//tours-with?distance=233&center=-40,45&unit=mi
+//tours-within/233/center/-40,45/unit/mi  // this approch is the standard way of writing url 
+
+
 router
   .route('/')
   .get(tourController.getAllTours)

@@ -36,9 +36,10 @@ const tourschema = new mongoose.Schema(
       default: 4.5,
       min: [1, 'Ratings must be above 1.0'],
       max: [5, 'Ratings must be below 5.0'],
-      index:true
+      //we r using setting fucntion to make should that every tkime new value added this setter fucntion will trigger and rounded the value ex: 4.66666 to 4.7
+      set: val => Math.round(val * 10) / 10 //46.666666 , 46.6666 , 47 , 4.7
     },
-    ratingQuantity: {
+    ratingsQuantity: {
       type: Number,
       deafult: 0,
     },
@@ -109,8 +110,10 @@ const tourschema = new mongoose.Schema(
   { toJSON: { virtuals: true }, toObject: { virtuals: true } },
 );
 
-tourschema.index({ price: 1, ratingAverage:-1 });
+tourschema.index({ price: 1, ratingAverage:-1 }); 
 tourschema.index({slug : 1});
+//with this we basically telling mongo db that this startLocation here should be indexed to a 2dsphere.
+tourschema.index({startLocation:'2dsphere'});
 
 //this is virtual properties
 tourschema.virtual('durationWeeks').get(function(){

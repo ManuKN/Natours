@@ -1,7 +1,8 @@
 const Tour = require('../models/tourModel');
 const APIfeatures = require('../utils/apifeatures');
 const catchAsych = require('../utils/catchAsych');
-const factory = require("./handleFactory")
+const factory = require("./handleFactory");
+const AppError = require("../utils/appError");
 // const tours = JSON.parse(
 //   fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`),
 // );
@@ -11,6 +12,7 @@ exports.aliasTopTours = (req, res, next) => {
   req.query.field = 'name,price,ratingAverage,summary,difficulty';
   next();
 };
+
 
 //RouteHandlers
 exports.getAllTours = factory.getAll(Tour)
@@ -123,3 +125,31 @@ exports.getMontlyPlan = catchAsych(async (req, res) => {
   //   })
   // }
 });
+
+
+///tours-within/:distance/center/:latlng/unit/:unit
+//tours-within/233/center/34.095985771295624, -118.32288708727299/unit/mi
+
+exports.getTourwithin = catchAsych(async(req , res , next) => {
+  const{distance , latlng , unit} = req.params;
+  const[lat , lng] = latlng.split(',');
+//we need to convert the distance into radius by dividing the distance with radius of the earth and we also make use of unit cause earth radius is diffrent in miles and km.
+// why we did this way beacuse ,monogo db expects the radius in radians
+  const radius = unit === 'mi' ? distance / 3963.2 : distance / 6378.1;
+
+  if(!lat && !lng)
+    {
+      return next(new AppError("Please provide latitide and langitude in the format of lat,lng",400))
+    }
+    //very important for finding geospacial locations
+const tours = await Tour.find({startLocation:{$geoWithin : {$centerSphere:[[lng , lat],radius]}}});
+
+
+   res.status(200).json({
+    status:"success",
+    result:tours.length,
+    data:{
+      data:tours
+    }
+   })
+})
