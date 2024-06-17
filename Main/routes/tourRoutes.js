@@ -26,7 +26,7 @@ router.route('/tours-within/:distance/center/:latlng/unit/:unit').get(tourContro
 //tours-with?distance=233&center=-40,45&unit=mi
 //tours-within/233/center/-40,45/unit/mi  // this approch is the standard way of writing url 
 
-
+router.route('/distance/:latlng/unit/:unit').get(tourController.getDistances);
 router
   .route('/')
   .get(tourController.getAllTours)
