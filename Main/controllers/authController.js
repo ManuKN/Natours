@@ -25,12 +25,11 @@ const createSendToken = (user , StatusCode , res) =>{
 
   const cookieOptions = {
     expires: new Date(
-      Date.now() + process.env.JWT_COOKIE_EXPIRESIN * 24 * 60 * 60 * 1000,
-    ), //here we r converting the expires num into milliseconds,
-                                                                                         
+      Date.now() + process.env.JWT_COOKIE_EXPIRESIN * 24 * 60 * 60 * 1000, 
+    ), //here we r converting the expires num into milliseconds,                                                                                       
   };
 
-  console.log(cookieOptions)
+  console.log('Cookie Option',cookieOptions)
 
   if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
 
