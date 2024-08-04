@@ -35,11 +35,11 @@ const DB = process.env.DATABASE.replace(
 //     console.log('Error 💥:', err);
 //   });
 
-console.log(process.env);
+// console.log(process.env);
  const Port = process.env.PORT;
-console.log(Port);
-console.log(process.env.NANHESRU);
-console.log(process.env.NODE_ENV);
+// console.log(Port);
+// console.log(process.env.NANHESRU);
+// console.log(process.env.NODE_ENV);
 app.listen(Port, () => {
   console.log(`App running on ${Port}`);
 });

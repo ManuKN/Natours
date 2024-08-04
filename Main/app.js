@@ -8,10 +8,12 @@ const mongosanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
 const AppError = require('./utils/appError');
+const viewRouter = require('./routes/viewRoutes');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
 const globalErrorHandler = require('./controllers/errorController');
+
 
 const app = express();
 app.set('view engine', 'pug');
@@ -68,17 +70,12 @@ app.use((req, res, next) => {
 
 app.use((req, res, next) => {
   req.requestedTime = new Date().toISOString();
-  console.log(req.headers);
+  console.log(req.headers); 
   next();
 });
 
 //Routes
-app.get('/',(req , res) => {
-  res.status(200).render('base',{
-    tour:'Forest',
-    user:'Manu'
-  })
-})
+app.use('/', viewRouter);
 app.use('/app/v1/tours', tourRouter);
 app.use('/app/v1/users', userRouter);
 app.use('/app/v1/review', reviewRouter);
